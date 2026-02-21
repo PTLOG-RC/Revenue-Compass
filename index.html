@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revenue Compass - Income Tracker for Personal Trainers</title>
+  <title>PT LOG - Revenue Compass for Coaches</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -232,8 +232,10 @@
           <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative bg-gray-800 border border-gray-700 rounded-2xl p-8 w-full max-w-md">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">Revenue Compass</h1>
-              <p className="text-gray-400">Income tracker for personal trainers</p>
+              <h1 style="margin: 0; font-size: 28px; font-weight: bold;">
+                <span className="text-cyan-400 text-3xl font-bold">PT LOG</span>
+              </h1>
+              <p className="text-gray-400 mt-2">Revenue Compass for Coaches</p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -275,7 +277,7 @@
       const [showPaymentModal, setShowPaymentModal] = useState(false);
       const [showTargetsModal, setShowTargetsModal] = useState(false);
       const [newClient, setNewClient] = useState({ name: '', email: '', phone: '' });
-      const [newPayment, setNewPayment] = useState({ client_id: '', type: 'Pack', amount: '', sessions: '' });
+      const [newPayment, setNewPayment] = useState({ client_id: '', type: 'Pack', amount: '', sessions: '', date: new Date().toISOString().split('T')[0] });
       const [editTargets, setEditTargets] = useState({ revenueGoal: 5000, clientsGoal: 15 });
 
       useEffect(() => {
@@ -323,14 +325,22 @@
         if (!newPayment.client_id || !newPayment.amount || !newPayment.sessions) return;
         const { error } = await supabaseClient.from('payments').insert([{
           client_id: newPayment.client_id, type: newPayment.type, amount: parseFloat(newPayment.amount),
-          sessions: parseInt(newPayment.sessions), sessions_completed: 0, user_id: user.id, date: new Date().toISOString().split('T')[0]
+          sessions: parseInt(newPayment.sessions), sessions_completed: 0, user_id: user.id, date: newPayment.date
         }]);
-        if (!error) { setNewPayment({ client_id: '', type: 'Pack', amount: '', sessions: '' }); setShowPaymentModal(false); fetchAllData(); }
+        if (!error) { setNewPayment({ client_id: '', type: 'Pack', amount: '', sessions: '', date: new Date().toISOString().split('T')[0] }); setShowPaymentModal(false); fetchAllData(); }
       };
 
-      const toggleSession = async (paymentId, currentCompleted, totalSessions) => {
-        if (currentCompleted >= totalSessions) return;
-        await supabaseClient.from('payments').update({ sessions_completed: currentCompleted + 1 }).eq('id', paymentId);
+      // Updated: Add or deduct sessions
+      const updateSession = async (paymentId, currentCompleted, totalSessions, action) => {
+        let newCompleted = currentCompleted;
+        if (action === 'add' && currentCompleted < totalSessions) {
+          newCompleted = currentCompleted + 1;
+        } else if (action === 'deduct' && currentCompleted > 0) {
+          newCompleted = currentCompleted - 1;
+        } else {
+          return;
+        }
+        await supabaseClient.from('payments').update({ sessions_completed: newCompleted }).eq('id', paymentId);
         fetchAllData();
       };
 
@@ -365,6 +375,7 @@
           <div className="fixed top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
+          {/* New Client Modal - Only name required */}
           {showNewClientModal && (
             <Modal title="New Client" onClose={() => setShowNewClientModal(false)}>
               <div className="space-y-4">
@@ -385,6 +396,7 @@
             </Modal>
           )}
 
+          {/* Payment Modal - With date picker */}
           {showPaymentModal && (
             <Modal title="Add Payment" onClose={() => setShowPaymentModal(false)}>
               <div className="space-y-4">
@@ -409,6 +421,10 @@
                     <input type="number" value={newPayment.sessions} onChange={(e) => setNewPayment({ ...newPayment, sessions: e.target.value })}
                       className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="0" /></div>
                 </div>
+                {/* Date picker for payment date */}
+                <div><label className="block text-gray-400 text-sm mb-2">Payment Date</label>
+                  <input type="date" value={newPayment.date} onChange={(e) => setNewPayment({ ...newPayment, date: e.target.value })}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
                 {newPayment.amount && newPayment.sessions && (
                   <div className="bg-gray-700/50 rounded-xl p-4">
                     <div className="flex items-center justify-between">
@@ -444,10 +460,14 @@
           )}
 
           <div className="relative">
+            {/* Updated Header */}
             <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-xl sticky top-0 z-10">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div><h1 className="text-2xl font-bold">Revenue Compass</h1><p className="text-gray-500 text-sm">Personal Training Dashboard</p></div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-cyan-400">PT LOG</h1>
+                    <p className="text-gray-500 text-sm">Revenue Compass for Coaches</p>
+                  </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <button onClick={() => setShowNewClientModal(true)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-xl text-sm">+ New Client</button>
                     <button onClick={() => setShowPaymentModal(true)} className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-medium rounded-xl text-sm">+ Add Payment</button>
@@ -525,6 +545,7 @@
                 <YearlyIncomePattern payments={payments} />
               </div>
 
+              {/* Updated Session Tracker with Add/Deduct */}
               <div className="bg-gray-800/50 backdrop-blur border border-cyan-500/30 rounded-2xl p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-6">✅ Session Tracker</h3>
                 {payments.length === 0 ? <p className="text-gray-500 text-center py-8">No payments yet. Add a payment to track sessions!</p> : (
@@ -535,22 +556,52 @@
                       <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{payments.reduce((sum, p) => sum + p.sessions, 0)}</div><div className="text-gray-400 text-sm">Total</div></div>
                     </div>
                     <div className="space-y-4">
-                      {payments.filter(p => p.sessions > p.sessions_completed).map(payment => (
+                      {payments.filter(p => p.sessions > p.sessions_completed || p.sessions_completed > 0).map(payment => (
                         <div key={payment.id} className="bg-gray-800/30 rounded-xl border border-gray-700/30 p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">{payment.clients?.name?.split(' ').map(n => n[0]).join('') || '?'}</div>
                               <div><div className="text-white font-medium">{payment.clients?.name || 'Unknown'}</div><div className="text-xs text-gray-400">{payment.type} • €{payment.amount}</div></div>
                             </div>
-                            <div className="text-right"><div className="text-white font-semibold">{payment.sessions_completed}/{payment.sessions}</div><div className={`text-xs ${payment.sessions - payment.sessions_completed <= 2 ? 'text-orange-400' : 'text-gray-400'}`}>{payment.sessions - payment.sessions_completed} left</div></div>
+                            <div className="text-right">
+                              <div className="text-white font-semibold">{payment.sessions_completed}/{payment.sessions}</div>
+                              <div className={`text-xs ${payment.sessions - payment.sessions_completed <= 2 && payment.sessions - payment.sessions_completed > 0 ? 'text-orange-400' : 'text-gray-400'}`}>
+                                {payment.sessions - payment.sessions_completed} left
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {Array.from({ length: payment.sessions }, (_, i) => (
-                              <button key={i} onClick={() => i === payment.sessions_completed && toggleSession(payment.id, payment.sessions_completed, payment.sessions)}
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all ${i < payment.sessions_completed ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400' : i === payment.sessions_completed ? 'bg-gray-700/50 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20 cursor-pointer' : 'bg-gray-700/30 border border-gray-600/30 text-gray-500'}`}>
-                                {i < payment.sessions_completed ? '✓' : i + 1}
-                              </button>
-                            ))}
+                          <div className="flex items-center gap-3">
+                            {/* Deduct button */}
+                            <button
+                              onClick={() => updateSession(payment.id, payment.sessions_completed, payment.sessions, 'deduct')}
+                              disabled={payment.sessions_completed === 0}
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition-all ${payment.sessions_completed > 0 ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 cursor-pointer' : 'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}
+                            >
+                              −
+                            </button>
+                            {/* Session boxes */}
+                            <div className="flex flex-wrap gap-2 flex-1">
+                              {Array.from({ length: payment.sessions }, (_, i) => (
+                                <div
+                                  key={i}
+                                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${
+                                    i < payment.sessions_completed 
+                                      ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400' 
+                                      : 'bg-gray-700/30 border border-gray-600/30 text-gray-500'
+                                  }`}
+                                >
+                                  {i < payment.sessions_completed ? '✓' : i + 1}
+                                </div>
+                              ))}
+                            </div>
+                            {/* Add button */}
+                            <button
+                              onClick={() => updateSession(payment.id, payment.sessions_completed, payment.sessions, 'add')}
+                              disabled={payment.sessions_completed >= payment.sessions}
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition-all ${payment.sessions_completed < payment.sessions ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30 cursor-pointer' : 'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}
+                            >
+                              +
+                            </button>
                           </div>
                         </div>
                       ))}
