@@ -21,9 +21,87 @@
     const SUPABASE_URL = 'https://wjaqbxxlnmcosnzzktza.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqYXFieHhsbm1jb3NuenprdHphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MTc5NzAsImV4cCI6MjA4NzE5Mzk3MH0.HuHA43JsQEUu9KRO95uDTl83Rpj528bJJdBv5KI5rhI';
     
+    // ==========================================
+    // YOUR STRIPE PAYMENT LINKS - REPLACE THESE
+    // ==========================================
+    const STRIPE_LINKS = {
+      monthly: 'https://buy.stripe.com/9B68wPfTF04Hbbkeoe3AY00',
+      yearly: 'https://buy.stripe.com/28E4gz36T6t54MW1Bs3AY01',
+      lifetime: 'https://buy.stripe.com/00w7sL0YL2cP93cgwm3AY02'
+    };
+    // ==========================================
+    
     const { createClient } = supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const { useState, useEffect } = React;
+
+    // Paywall Component
+    const Paywall = ({ email, onLogout }) => (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 pointer-events-none" />
+        <div className="fixed top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative max-w-4xl w-full">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h1>
+            <p className="text-gray-400 text-lg">Get full access to PT LOG and start tracking your revenue</p>
+            <p className="text-gray-500 text-sm mt-2">Logged in as {email}</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 hover:border-cyan-500/50 transition-all">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">Monthly</h3>
+                <div className="text-4xl font-bold text-white mb-1">€19</div>
+                <div className="text-gray-400 text-sm mb-6">per month</div>
+                <ul className="text-left space-y-3 mb-6">
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features included</li>
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Unlimited clients</li>
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Cancel anytime</li>
+                </ul>
+                <a href={STRIPE_LINKS.monthly} className="block w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors text-center">Get Started</a>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 border-2 border-cyan-500 rounded-2xl p-6 relative transform md:-translate-y-2">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-500 text-gray-900 text-xs font-bold px-4 py-1 rounded-full">BEST VALUE</div>
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">Yearly</h3>
+                <div className="text-4xl font-bold text-white mb-1">€190</div>
+                <div className="text-gray-400 text-sm mb-1">per year</div>
+                <div className="text-emerald-400 text-sm font-medium mb-6">Save €38 (2 months free!)</div>
+                <ul className="text-left space-y-3 mb-6">
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features included</li>
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Unlimited clients</li>
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Priority support</li>
+                </ul>
+                <a href={STRIPE_LINKS.yearly} className="block w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold rounded-xl transition-colors text-center">Get Started</a>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 border border-yellow-500/50 rounded-2xl p-6 hover:border-yellow-500 transition-all">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">Lifetime</h3>
+                <div className="text-4xl font-bold text-white mb-1">€249</div>
+                <div className="text-gray-400 text-sm mb-1">one-time payment</div>
+                <div className="text-orange-400 text-sm font-medium mb-6">🔥 Only 50 spots!</div>
+                <ul className="text-left space-y-3 mb-6">
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features forever</li>
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All future updates</li>
+                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Never pay again</li>
+                </ul>
+                <a href={STRIPE_LINKS.lifetime} className="block w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold rounded-xl transition-colors text-center">Get Lifetime Access</a>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <button onClick={onLogout} className="text-gray-500 hover:text-gray-300 text-sm">Logout</button>
+          </div>
+        </div>
+      </div>
+    );
 
     const Modal = ({ title, children, onClose }) => (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
@@ -60,13 +138,10 @@
         <div className="mb-4">
           <div className="flex justify-between mb-2">
             <span className="text-gray-300 text-sm font-medium">{label}</span>
-            <span className="text-white text-sm font-semibold">{typeof current === 'number' ? current.toLocaleString() : current} / {typeof goal === 'number' ? goal.toLocaleString() : goal}</span>
+            <span className="text-white text-sm font-semibold">{current.toLocaleString()} / {goal.toLocaleString()}</span>
           </div>
           <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
             <div className={`h-full rounded-full bg-gradient-to-r ${color} transition-all duration-700`} style={{ width: `${percentage}%` }} />
-          </div>
-          <div className="text-right mt-1">
-            <span className="text-gray-400 text-xs">{percentage.toFixed(0)}%</span>
           </div>
         </div>
       );
@@ -90,12 +165,9 @@
         <div className="flex items-end justify-between gap-3 h-48">
           {monthlyData.map((month, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-2">
-              <span className="text-emerald-400 text-sm font-medium">
-                €{month.income >= 1000 ? (month.income / 1000).toFixed(1) + 'k' : month.income}
-              </span>
+              <span className="text-emerald-400 text-sm font-medium">€{month.income >= 1000 ? (month.income/1000).toFixed(1)+'k' : month.income}</span>
               <div className="w-full bg-gray-700/50 rounded-lg relative overflow-hidden" style={{ height: '120px' }}>
-                <div className={`absolute bottom-0 w-full rounded-lg transition-all duration-700 ${month.isCurrentMonth ? 'bg-gradient-to-t from-cyan-500 to-cyan-400' : 'bg-gradient-to-t from-emerald-600 to-emerald-400'}`}
-                  style={{ height: `${(month.income / maxIncome) * 100}%` }} />
+                <div className={`absolute bottom-0 w-full rounded-lg transition-all duration-700 ${month.isCurrentMonth ? 'bg-gradient-to-t from-cyan-500 to-cyan-400' : 'bg-gradient-to-t from-emerald-600 to-emerald-400'}`} style={{ height: `${(month.income / maxIncome) * 100}%` }} />
               </div>
               <span className={`text-xs font-medium ${month.isCurrentMonth ? 'text-cyan-400' : 'text-gray-400'}`}>{month.month}</span>
             </div>
@@ -106,15 +178,10 @@
 
     const YearlyIncomePattern = ({ payments }) => {
       const now = new Date();
-      const currentYear = now.getFullYear();
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const yearlyData = months.map((month, index) => {
-        const monthPayments = payments.filter(p => {
-          const pDate = new Date(p.date);
-          return pDate.getMonth() === index && pDate.getFullYear() === currentYear;
-        });
-        const income = monthPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-        return { month, income, monthIndex: index };
+        const monthPayments = payments.filter(p => { const pDate = new Date(p.date); return pDate.getMonth() === index && pDate.getFullYear() === now.getFullYear(); });
+        return { month, income: monthPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) };
       });
       const totalIncome = yearlyData.reduce((sum, m) => sum + m.income, 0);
       const avgIncome = yearlyData.filter(m => m.income > 0).length > 0 ? totalIncome / yearlyData.filter(m => m.income > 0).length : 0;
@@ -124,20 +191,15 @@
         if (income <= avgIncome * 0.85) return { color: 'bg-red-500/20 border border-red-500/50', textColor: 'text-red-400' };
         return { color: 'bg-cyan-500/20 border border-cyan-500/50', textColor: 'text-cyan-400' };
       };
-      const bestMonth = yearlyData.reduce((best, curr) => curr.income > best.income ? curr : best, yearlyData[0]);
-      const worstMonth = yearlyData.filter(m => m.income > 0).reduce((worst, curr) => curr.income < worst.income ? curr : worst, yearlyData.find(m => m.income > 0) || yearlyData[0]);
       return (
         <div>
           <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2 mb-6">
             {yearlyData.map((m, i) => {
               const strength = getStrength(m.income);
-              const isCurrentMonth = i === now.getMonth();
               return (
-                <div key={i} className={`rounded-xl p-3 text-center transition-all ${strength.color} ${isCurrentMonth ? 'ring-2 ring-cyan-400' : ''}`}>
+                <div key={i} className={`rounded-xl p-3 text-center ${strength.color} ${i === now.getMonth() ? 'ring-2 ring-cyan-400' : ''}`}>
                   <div className="text-xs text-gray-400 mb-1">{m.month}</div>
-                  <div className={`text-sm font-bold ${strength.textColor}`}>
-                    {m.income > 0 ? `€${(m.income / 1000).toFixed(1)}k` : '-'}
-                  </div>
+                  <div className={`text-sm font-bold ${strength.textColor}`}>{m.income > 0 ? `€${(m.income/1000).toFixed(1)}k` : '-'}</div>
                 </div>
               );
             })}
@@ -147,14 +209,6 @@
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-cyan-500/50"></div><span className="text-gray-400">Average</span></div>
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-red-500/30"></div><span className="text-gray-400">Weak</span></div>
           </div>
-          {bestMonth.income > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-700 flex flex-wrap gap-6 text-sm">
-              <div><span className="text-gray-400">Best: </span><span className="text-emerald-400 font-semibold">{bestMonth.month} (€{bestMonth.income.toLocaleString()})</span></div>
-              {worstMonth && worstMonth.income > 0 && worstMonth.month !== bestMonth.month && (
-                <div><span className="text-gray-400">Plan for: </span><span className="text-orange-400 font-semibold">{worstMonth.month}</span></div>
-              )}
-            </div>
-          )}
         </div>
       );
     };
@@ -163,37 +217,28 @@
       const now = new Date();
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const sessionData = months.map((month, index) => {
-        const monthPayments = payments.filter(p => {
-          const pDate = new Date(p.date);
-          return pDate.getMonth() === index && pDate.getFullYear() === now.getFullYear();
-        });
-        const sessions = monthPayments.reduce((sum, p) => sum + (p.sessions_completed || 0), 0);
-        return { month, sessions, isCurrentMonth: index === now.getMonth() };
+        const monthPayments = payments.filter(p => { const pDate = new Date(p.date); return pDate.getMonth() === index && pDate.getFullYear() === now.getFullYear(); });
+        return { month, sessions: monthPayments.reduce((sum, p) => sum + (p.sessions_completed || 0), 0), isCurrentMonth: index === now.getMonth() };
       });
       const maxSessions = Math.max(...sessionData.map(m => m.sessions), 1);
       const totalSessions = sessionData.reduce((sum, m) => sum + m.sessions, 0);
-      const monthsWithData = sessionData.filter(m => m.sessions > 0).length;
-      const avgSessions = monthsWithData > 0 ? Math.round(totalSessions / monthsWithData) : 0;
+      const avgSessions = sessionData.filter(m => m.sessions > 0).length > 0 ? Math.round(totalSessions / sessionData.filter(m => m.sessions > 0).length) : 0;
       return (
         <div>
           <div className="flex items-end justify-between gap-1 h-32 mb-4">
-            {sessionData.map((m, i) => {
-              const height = maxSessions > 0 ? (m.sessions / maxSessions) * 100 : 0;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <span className={`text-xs font-medium ${m.isCurrentMonth ? 'text-cyan-400' : 'text-purple-400'}`}>{m.sessions || ''}</span>
-                  <div className="w-full bg-gray-700/50 rounded relative overflow-hidden" style={{ height: '80px' }}>
-                    <div className={`absolute bottom-0 w-full rounded transition-all duration-500 ${m.isCurrentMonth ? 'bg-gradient-to-t from-cyan-500 to-cyan-400' : 'bg-gradient-to-t from-purple-600 to-purple-400'}`}
-                      style={{ height: `${height}%` }} />
-                  </div>
-                  <span className={`text-xs ${m.isCurrentMonth ? 'text-cyan-400 font-medium' : 'text-gray-500'}`}>{m.month.slice(0, 1)}</span>
+            {sessionData.map((m, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <span className={`text-xs font-medium ${m.isCurrentMonth ? 'text-cyan-400' : 'text-purple-400'}`}>{m.sessions || ''}</span>
+                <div className="w-full bg-gray-700/50 rounded relative overflow-hidden" style={{ height: '80px' }}>
+                  <div className={`absolute bottom-0 w-full rounded ${m.isCurrentMonth ? 'bg-gradient-to-t from-cyan-500 to-cyan-400' : 'bg-gradient-to-t from-purple-600 to-purple-400'}`} style={{ height: `${(m.sessions / maxSessions) * 100}%` }} />
                 </div>
-              );
-            })}
+                <span className={`text-xs ${m.isCurrentMonth ? 'text-cyan-400' : 'text-gray-500'}`}>{m.month.slice(0,1)}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center justify-between text-sm pt-4 border-t border-gray-700">
-            <span className="text-gray-400">Total: <span className="text-white font-semibold">{totalSessions} sessions</span></span>
-            <span className="text-gray-400">Avg: <span className="text-purple-400 font-semibold">{avgSessions}/month</span></span>
+          <div className="flex justify-between text-sm pt-4 border-t border-gray-700">
+            <span className="text-gray-400">Total: <span className="text-white font-semibold">{totalSessions}</span></span>
+            <span className="text-gray-400">Avg: <span className="text-purple-400 font-semibold">{avgSessions}/mo</span></span>
           </div>
         </div>
       );
@@ -210,20 +255,13 @@
         setError('');
         setLoading(true);
         try {
-          if (isLogin) {
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            onLogin(data.user);
-          } else {
-            const { data, error } = await supabaseClient.auth.signUp({ email, password });
-            if (error) throw error;
-            if (data.user) onLogin(data.user);
-          }
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
+          const { data, error } = isLogin 
+            ? await supabaseClient.auth.signInWithPassword({ email, password })
+            : await supabaseClient.auth.signUp({ email, password });
+          if (error) throw error;
+          if (data.user) onLogin(data.user);
+        } catch (err) { setError(err.message); }
+        finally { setLoading(false); }
       };
       return (
         <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -232,36 +270,22 @@
           <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative bg-gray-800 border border-gray-700 rounded-2xl p-8 w-full max-w-md">
             <div className="text-center mb-8">
-              <h1 style="margin: 0; font-size: 28px; font-weight: bold;">
-                <span className="text-cyan-400 text-3xl font-bold">PT LOG</span>
-              </h1>
+              <h1 className="text-3xl font-bold text-cyan-400">PT LOG</h1>
               <p className="text-gray-400 mt-2">Revenue Compass for Coaches</p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Email</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none"
-                  placeholder="you@example.com" required />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="you@example.com" required />
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Password</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none"
-                  placeholder="Min 6 characters" required minLength={6} />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="Min 6 characters" required minLength={6} />
               </div>
               {error && <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm">{error}</div>}
-              <button type="submit" disabled={loading}
-                className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 font-semibold rounded-xl transition-colors">
-                {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}
-              </button>
+              <button type="submit" disabled={loading} className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 font-semibold rounded-xl">{loading ? 'Loading...' : isLogin ? 'Sign In' : 'Create Account'}</button>
             </form>
-            <p className="text-center mt-6 text-gray-400">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-              <button onClick={() => setIsLogin(!isLogin)} className="text-cyan-400 hover:text-cyan-300">
-                {isLogin ? 'Sign Up' : 'Sign In'}
-              </button>
-            </p>
+            <p className="text-center mt-6 text-gray-400">{isLogin ? "Don't have an account?" : "Already have an account?"} <button onClick={() => setIsLogin(!isLogin)} className="text-cyan-400 hover:text-cyan-300">{isLogin ? 'Sign Up' : 'Sign In'}</button></p>
           </div>
         </div>
       );
@@ -270,6 +294,8 @@
     const App = () => {
       const [user, setUser] = useState(null);
       const [loading, setLoading] = useState(true);
+      const [subscription, setSubscription] = useState(null);
+      const [checkingSub, setCheckingSub] = useState(false);
       const [clients, setClients] = useState([]);
       const [payments, setPayments] = useState([]);
       const [targets, setTargets] = useState([]);
@@ -281,85 +307,77 @@
       const [editTargets, setEditTargets] = useState({ revenueGoal: 5000, clientsGoal: 15 });
 
       useEffect(() => {
-        supabaseClient.auth.getSession().then(({ data: { session } }) => {
-          setUser(session?.user ?? null);
-          setLoading(false);
-        });
-        const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-          setUser(session?.user ?? null);
-        });
+        supabaseClient.auth.getSession().then(({ data: { session } }) => { setUser(session?.user ?? null); setLoading(false); });
+        const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => { setUser(session?.user ?? null); });
         return () => subscription.unsubscribe();
       }, []);
 
-      useEffect(() => {
-        if (user) fetchAllData();
-      }, [user]);
+      useEffect(() => { if (user) checkSubscription(); }, [user]);
+
+      const checkSubscription = async () => {
+        setCheckingSub(true);
+        try {
+          const { data } = await supabaseClient.from('subscriptions').select('*').eq('email', user.email).eq('status', 'active').single();
+          if (data) {
+            if (data.plan_type !== 'lifetime' && data.expires_at && new Date(data.expires_at) < new Date()) {
+              setSubscription(null);
+            } else {
+              setSubscription(data);
+              fetchAllData();
+            }
+          } else { setSubscription(null); }
+        } catch { setSubscription(null); }
+        finally { setCheckingSub(false); }
+      };
 
       const fetchAllData = async () => {
-        const [clientsRes, paymentsRes, targetsRes] = await Promise.all([
+        const [c, p, t] = await Promise.all([
           supabaseClient.from('clients').select('*').order('created_at', { ascending: false }),
           supabaseClient.from('payments').select('*, clients(name)').order('date', { ascending: false }),
           supabaseClient.from('targets').select('*')
         ]);
-        setClients(clientsRes.data || []);
-        setPayments(paymentsRes.data || []);
-        if (targetsRes.data && targetsRes.data.length === 0) {
-          const defaultTargets = [
-            { target_name: 'Monthly Revenue', current_value: 0, goal: 5000, user_id: user.id },
-            { target_name: 'Active Clients', current_value: 0, goal: 15, user_id: user.id },
-          ];
-          await supabaseClient.from('targets').insert(defaultTargets);
-          setTargets(defaultTargets);
-        } else {
-          setTargets(targetsRes.data || []);
-        }
+        setClients(c.data || []);
+        setPayments(p.data || []);
+        if (t.data?.length === 0) {
+          const def = [{ target_name: 'Monthly Revenue', goal: 5000, user_id: user.id }, { target_name: 'Active Clients', goal: 15, user_id: user.id }];
+          await supabaseClient.from('targets').insert(def);
+          setTargets(def);
+        } else { setTargets(t.data || []); }
       };
 
       const handleAddClient = async () => {
         if (!newClient.name.trim()) return;
-        const { error } = await supabaseClient.from('clients').insert([{ ...newClient, user_id: user.id, status: 'Active' }]);
-        if (!error) { setNewClient({ name: '', email: '', phone: '' }); setShowNewClientModal(false); fetchAllData(); }
+        await supabaseClient.from('clients').insert([{ ...newClient, user_id: user.id, status: 'Active' }]);
+        setNewClient({ name: '', email: '', phone: '' }); setShowNewClientModal(false); fetchAllData();
       };
 
       const handleAddPayment = async () => {
         if (!newPayment.client_id || !newPayment.amount || !newPayment.sessions) return;
-        const { error } = await supabaseClient.from('payments').insert([{
-          client_id: newPayment.client_id, type: newPayment.type, amount: parseFloat(newPayment.amount),
-          sessions: parseInt(newPayment.sessions), sessions_completed: 0, user_id: user.id, date: newPayment.date
-        }]);
-        if (!error) { setNewPayment({ client_id: '', type: 'Pack', amount: '', sessions: '', date: new Date().toISOString().split('T')[0] }); setShowPaymentModal(false); fetchAllData(); }
+        await supabaseClient.from('payments').insert([{ client_id: newPayment.client_id, type: newPayment.type, amount: parseFloat(newPayment.amount), sessions: parseInt(newPayment.sessions), sessions_completed: 0, user_id: user.id, date: newPayment.date }]);
+        setNewPayment({ client_id: '', type: 'Pack', amount: '', sessions: '', date: new Date().toISOString().split('T')[0] }); setShowPaymentModal(false); fetchAllData();
       };
 
-      // Updated: Add or deduct sessions
-      const updateSession = async (paymentId, currentCompleted, totalSessions, action) => {
-        let newCompleted = currentCompleted;
-        if (action === 'add' && currentCompleted < totalSessions) {
-          newCompleted = currentCompleted + 1;
-        } else if (action === 'deduct' && currentCompleted > 0) {
-          newCompleted = currentCompleted - 1;
-        } else {
-          return;
-        }
-        await supabaseClient.from('payments').update({ sessions_completed: newCompleted }).eq('id', paymentId);
-        fetchAllData();
+      const updateSession = async (id, curr, total, action) => {
+        const newVal = action === 'add' ? Math.min(curr + 1, total) : Math.max(curr - 1, 0);
+        if (newVal !== curr) { await supabaseClient.from('payments').update({ sessions_completed: newVal }).eq('id', id); fetchAllData(); }
       };
 
-      const handleLogout = async () => { await supabaseClient.auth.signOut(); setUser(null); };
+      const handleLogout = async () => { await supabaseClient.auth.signOut(); setUser(null); setSubscription(null); };
 
       const handleUpdateTargets = async () => {
-        const revenueTarget = targets.find(t => t.target_name === 'Monthly Revenue');
-        const clientsTarget = targets.find(t => t.target_name === 'Active Clients');
-        if (revenueTarget) await supabaseClient.from('targets').update({ goal: editTargets.revenueGoal }).eq('id', revenueTarget.id);
-        if (clientsTarget) await supabaseClient.from('targets').update({ goal: editTargets.clientsGoal }).eq('id', clientsTarget.id);
+        const rev = targets.find(t => t.target_name === 'Monthly Revenue');
+        const cli = targets.find(t => t.target_name === 'Active Clients');
+        if (rev) await supabaseClient.from('targets').update({ goal: editTargets.revenueGoal }).eq('id', rev.id);
+        if (cli) await supabaseClient.from('targets').update({ goal: editTargets.clientsGoal }).eq('id', cli.id);
         setShowTargetsModal(false); fetchAllData();
       };
 
-      const totalRevenue = payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
       const now = new Date();
-      const thisMonthPayments = payments.filter(p => { const pDate = new Date(p.date); return pDate.getMonth() === now.getMonth() && pDate.getFullYear() === now.getFullYear(); });
-      const thisMonthRevenue = thisMonthPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-      const lastMonthPayments = payments.filter(p => { const pDate = new Date(p.date); const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); return pDate.getMonth() === lastMonth.getMonth() && pDate.getFullYear() === lastMonth.getFullYear(); });
-      const lastMonthRevenue = lastMonthPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+      const thisMonthPayments = payments.filter(p => { const d = new Date(p.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+      const thisMonthRevenue = thisMonthPayments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+      const lastMonthPayments = payments.filter(p => { const d = new Date(p.date); const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1); return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear(); });
+      const lastMonthRevenue = lastMonthPayments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+      const totalRevenue = payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
       const revenueTrend = lastMonthRevenue > 0 ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100) : null;
       const activeClients = clients.filter(c => c.status === 'Active').length;
       const renewalsSoon = payments.filter(p => (p.sessions - p.sessions_completed) <= 2 && (p.sessions - p.sessions_completed) > 0);
@@ -368,6 +386,8 @@
 
       if (loading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-cyan-400 text-xl">Loading...</div></div>;
       if (!user) return <AuthScreen onLogin={setUser} />;
+      if (checkingSub) return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-cyan-400 text-xl">Checking subscription...</div></div>;
+      if (!subscription) return <Paywall email={user.email} onLogout={handleLogout} />;
 
       return (
         <div className="min-h-screen bg-gray-900 text-white">
@@ -375,102 +395,43 @@
           <div className="fixed top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* New Client Modal - Only name required */}
-          {showNewClientModal && (
-            <Modal title="New Client" onClose={() => setShowNewClientModal(false)}>
-              <div className="space-y-4">
-                <div><label className="block text-gray-400 text-sm mb-2">Name *</label>
-                  <input type="text" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="Client name" /></div>
-                <div><label className="block text-gray-400 text-sm mb-2">Email <span className="text-gray-500">(optional)</span></label>
-                  <input type="email" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="email@example.com" /></div>
-                <div><label className="block text-gray-400 text-sm mb-2">Phone <span className="text-gray-500">(optional)</span></label>
-                  <input type="tel" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="+1 234 567 890" /></div>
-                <div className="flex gap-3 pt-4">
-                  <button onClick={() => setShowNewClientModal(false)} className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button>
-                  <button onClick={handleAddClient} disabled={!newClient.name.trim()} className="flex-1 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 rounded-xl font-medium">Add Client</button>
-                </div>
-              </div>
-            </Modal>
-          )}
+          {showNewClientModal && <Modal title="New Client" onClose={() => setShowNewClientModal(false)}>
+            <div className="space-y-4">
+              <div><label className="block text-gray-400 text-sm mb-2">Name *</label><input type="text" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="Client name" /></div>
+              <div><label className="block text-gray-400 text-sm mb-2">Email <span className="text-gray-500">(optional)</span></label><input type="email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
+              <div><label className="block text-gray-400 text-sm mb-2">Phone <span className="text-gray-500">(optional)</span></label><input type="tel" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
+              <div className="flex gap-3 pt-4"><button onClick={() => setShowNewClientModal(false)} className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button><button onClick={handleAddClient} disabled={!newClient.name.trim()} className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 rounded-xl font-medium">Add</button></div>
+            </div>
+          </Modal>}
 
-          {/* Payment Modal - With date picker */}
-          {showPaymentModal && (
-            <Modal title="Add Payment" onClose={() => setShowPaymentModal(false)}>
-              <div className="space-y-4">
-                <div><label className="block text-gray-400 text-sm mb-2">Client *</label>
-                  <select value={newPayment.client_id} onChange={(e) => setNewPayment({ ...newPayment, client_id: e.target.value })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none">
-                    <option value="">Select client...</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select></div>
-                <div><label className="block text-gray-400 text-sm mb-2">Type</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['Single', 'Pack', 'Monthly'].map(type => (
-                      <button key={type} onClick={() => setNewPayment({ ...newPayment, type })}
-                        className={`p-3 rounded-xl border transition-all ${newPayment.type === type ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-gray-700/50 border-gray-600 text-gray-300'}`}>{type}</button>
-                    ))}
-                  </div></div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-gray-400 text-sm mb-2">Amount (€) *</label>
-                    <input type="number" value={newPayment.amount} onChange={(e) => setNewPayment({ ...newPayment, amount: e.target.value })}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="0.00" /></div>
-                  <div><label className="block text-gray-400 text-sm mb-2">Sessions *</label>
-                    <input type="number" value={newPayment.sessions} onChange={(e) => setNewPayment({ ...newPayment, sessions: e.target.value })}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="0" /></div>
-                </div>
-                {/* Date picker for payment date */}
-                <div><label className="block text-gray-400 text-sm mb-2">Payment Date</label>
-                  <input type="date" value={newPayment.date} onChange={(e) => setNewPayment({ ...newPayment, date: e.target.value })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
-                {newPayment.amount && newPayment.sessions && (
-                  <div className="bg-gray-700/50 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Price per session:</span>
-                      <span className="text-xl font-bold text-yellow-400">€{(parseFloat(newPayment.amount) / parseInt(newPayment.sessions)).toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
-                <div className="flex gap-3 pt-4">
-                  <button onClick={() => setShowPaymentModal(false)} className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button>
-                  <button onClick={handleAddPayment} disabled={!newPayment.client_id || !newPayment.amount || !newPayment.sessions}
-                    className="flex-1 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 rounded-xl font-medium">Add Payment</button>
-                </div>
-              </div>
-            </Modal>
-          )}
+          {showPaymentModal && <Modal title="Add Payment" onClose={() => setShowPaymentModal(false)}>
+            <div className="space-y-4">
+              <div><label className="block text-gray-400 text-sm mb-2">Client *</label><select value={newPayment.client_id} onChange={(e) => setNewPayment({...newPayment, client_id: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none"><option value="">Select...</option>{clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+              <div><label className="block text-gray-400 text-sm mb-2">Type</label><div className="grid grid-cols-3 gap-2">{['Single','Pack','Monthly'].map(t => <button key={t} onClick={() => setNewPayment({...newPayment, type: t})} className={`p-3 rounded-xl border ${newPayment.type === t ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-gray-700/50 border-gray-600 text-gray-300'}`}>{t}</button>)}</div></div>
+              <div className="grid grid-cols-2 gap-4"><div><label className="block text-gray-400 text-sm mb-2">Amount (€) *</label><input type="number" value={newPayment.amount} onChange={(e) => setNewPayment({...newPayment, amount: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div><div><label className="block text-gray-400 text-sm mb-2">Sessions *</label><input type="number" value={newPayment.sessions} onChange={(e) => setNewPayment({...newPayment, sessions: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div></div>
+              <div><label className="block text-gray-400 text-sm mb-2">Date</label><input type="date" value={newPayment.date} onChange={(e) => setNewPayment({...newPayment, date: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
+              {newPayment.amount && newPayment.sessions && <div className="bg-gray-700/50 rounded-xl p-4 flex justify-between"><span className="text-gray-400">Per session:</span><span className="text-xl font-bold text-yellow-400">€{(parseFloat(newPayment.amount)/parseInt(newPayment.sessions)).toFixed(2)}</span></div>}
+              <div className="flex gap-3 pt-4"><button onClick={() => setShowPaymentModal(false)} className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button><button onClick={handleAddPayment} disabled={!newPayment.client_id || !newPayment.amount || !newPayment.sessions} className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 rounded-xl font-medium">Add</button></div>
+            </div>
+          </Modal>}
 
-          {showTargetsModal && (
-            <Modal title="Edit Targets" onClose={() => setShowTargetsModal(false)}>
-              <div className="space-y-4">
-                <div><label className="block text-gray-400 text-sm mb-2">Monthly Revenue Goal (€)</label>
-                  <input type="number" value={editTargets.revenueGoal} onChange={(e) => setEditTargets({ ...editTargets, revenueGoal: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
-                <div><label className="block text-gray-400 text-sm mb-2">Active Clients Goal</label>
-                  <input type="number" value={editTargets.clientsGoal} onChange={(e) => setEditTargets({ ...editTargets, clientsGoal: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
-                <div className="flex gap-3 pt-4">
-                  <button onClick={() => setShowTargetsModal(false)} className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button>
-                  <button onClick={handleUpdateTargets} className="flex-1 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 text-gray-900 rounded-xl font-medium">Save</button>
-                </div>
-              </div>
-            </Modal>
-          )}
+          {showTargetsModal && <Modal title="Edit Targets" onClose={() => setShowTargetsModal(false)}>
+            <div className="space-y-4">
+              <div><label className="block text-gray-400 text-sm mb-2">Monthly Revenue Goal (€)</label><input type="number" value={editTargets.revenueGoal} onChange={(e) => setEditTargets({...editTargets, revenueGoal: parseInt(e.target.value)||0})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
+              <div><label className="block text-gray-400 text-sm mb-2">Active Clients Goal</label><input type="number" value={editTargets.clientsGoal} onChange={(e) => setEditTargets({...editTargets, clientsGoal: parseInt(e.target.value)||0})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
+              <div className="flex gap-3 pt-4"><button onClick={() => setShowTargetsModal(false)} className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button><button onClick={handleUpdateTargets} className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-400 text-gray-900 rounded-xl font-medium">Save</button></div>
+            </div>
+          </Modal>}
 
           <div className="relative">
-            {/* Updated Header */}
             <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-xl sticky top-0 z-10">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-bold text-cyan-400">PT LOG</h1>
-                    <p className="text-gray-500 text-sm">Revenue Compass for Coaches</p>
-                  </div>
+                  <div><h1 className="text-2xl font-bold text-cyan-400">PT LOG</h1><p className="text-gray-500 text-sm">Revenue Compass for Coaches</p></div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <button onClick={() => setShowNewClientModal(true)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-xl text-sm">+ New Client</button>
-                    <button onClick={() => setShowPaymentModal(true)} className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-medium rounded-xl text-sm">+ Add Payment</button>
+                    <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full font-medium">{subscription.plan_type.toUpperCase()}</span>
+                    <button onClick={() => setShowNewClientModal(true)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-xl text-sm">+ Client</button>
+                    <button onClick={() => setShowPaymentModal(true)} className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-medium rounded-xl text-sm">+ Payment</button>
                     <button onClick={handleLogout} className="px-4 py-2 text-gray-400 hover:text-white text-sm">Logout</button>
                   </div>
                 </div>
@@ -488,126 +449,39 @@
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 <div className="lg:col-span-2 bg-gray-800/50 backdrop-blur border border-gray-700/50 rounded-2xl p-6">
                   <h3 className="text-lg font-semibold mb-6">📊 Monthly Income</h3>
-                  {payments.length === 0 ? <p className="text-gray-500 text-center py-12">Add payments to see your income chart</p> : <MonthlyIncomeChart payments={payments} />}
+                  {payments.length === 0 ? <p className="text-gray-500 text-center py-12">Add payments to see chart</p> : <MonthlyIncomeChart payments={payments} />}
                 </div>
                 <div className="bg-gray-800/50 backdrop-blur border border-gray-700/50 rounded-2xl p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold">🎯 Targets</h3>
-                    <button onClick={() => { setEditTargets({ revenueGoal: revenueTarget?.goal || 5000, clientsGoal: clientsTarget?.goal || 15 }); setShowTargetsModal(true); }} className="text-gray-400 hover:text-white text-sm">Edit</button>
-                  </div>
-                  <ProgressBar current={thisMonthRevenue} goal={revenueTarget?.goal || 5000} label="Monthly Revenue (€)" color="from-emerald-500 to-emerald-400" />
-                  <ProgressBar current={activeClients} goal={clientsTarget?.goal || 15} label="Active Clients" color="from-purple-500 to-purple-400" />
-                  {renewalsSoon.length > 0 && (
-                    <div className="mt-6 pt-4 border-t border-gray-700">
-                      <h4 className="text-sm text-gray-400 mb-3">⚠️ Renewals Soon</h4>
-                      <div className="space-y-2">
-                        {renewalsSoon.slice(0, 3).map(p => (
-                          <div key={p.id} className="flex items-center justify-between text-sm bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-2">
-                            <span className="text-gray-300">{p.clients?.name}</span>
-                            <span className="text-orange-400 font-medium">{p.sessions - p.sessions_completed} left</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex justify-between mb-6"><h3 className="text-lg font-semibold">🎯 Targets</h3><button onClick={() => { setEditTargets({ revenueGoal: revenueTarget?.goal||5000, clientsGoal: clientsTarget?.goal||15 }); setShowTargetsModal(true); }} className="text-gray-400 hover:text-white text-sm">Edit</button></div>
+                  <ProgressBar current={thisMonthRevenue} goal={revenueTarget?.goal||5000} label="Revenue (€)" color="from-emerald-500 to-emerald-400" />
+                  <ProgressBar current={activeClients} goal={clientsTarget?.goal||15} label="Clients" color="from-purple-500 to-purple-400" />
+                  {renewalsSoon.length > 0 && <div className="mt-6 pt-4 border-t border-gray-700"><h4 className="text-sm text-gray-400 mb-3">⚠️ Renewals Soon</h4><div className="space-y-2">{renewalsSoon.slice(0,3).map(p => <div key={p.id} className="flex justify-between text-sm bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-2"><span className="text-gray-300">{p.clients?.name}</span><span className="text-orange-400 font-medium">{p.sessions-p.sessions_completed} left</span></div>)}</div></div>}
                 </div>
               </div>
 
               <div className="bg-gray-800/50 backdrop-blur border border-gray-700/50 rounded-2xl p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-6">💎 Revenue Per Client</h3>
-                {clients.length === 0 ? <p className="text-gray-500 text-center py-8">No clients yet. Add your first client!</p> : (
-                  <div className="space-y-3">
-                    {clients.map(client => ({ ...client, revenue: payments.filter(p => p.client_id === client.id).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) }))
-                      .sort((a, b) => b.revenue - a.revenue).map((client, i) => {
-                        const maxRevenue = Math.max(...clients.map(c => payments.filter(p => p.client_id === c.id).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)), 1);
-                        const colors = ['from-cyan-500 to-cyan-400', 'from-purple-500 to-purple-400', 'from-emerald-500 to-emerald-400', 'from-orange-500 to-orange-400'];
-                        return (
-                          <div key={client.id}>
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="flex items-center gap-2">
-                                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${colors[i % colors.length]} flex items-center justify-center text-white text-xs font-semibold`}>{client.name?.split(' ').map(n => n[0]).join('')}</div>
-                                <span className="text-gray-300">{client.name}</span>
-                              </div>
-                              <span className="text-white font-semibold">€{client.revenue.toLocaleString()}</span>
-                            </div>
-                            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full bg-gradient-to-r ${colors[i % colors.length]}`} style={{ width: `${(client.revenue / maxRevenue) * 100}%` }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
+                {clients.length === 0 ? <p className="text-gray-500 text-center py-8">No clients yet</p> : <div className="space-y-3">{clients.map(c => ({...c, revenue: payments.filter(p => p.client_id === c.id).reduce((s,p) => s+parseFloat(p.amount||0),0)})).sort((a,b) => b.revenue-a.revenue).map((c,i) => {const max = Math.max(...clients.map(cl => payments.filter(p => p.client_id===cl.id).reduce((s,p) => s+parseFloat(p.amount||0),0)),1); const colors = ['from-cyan-500 to-cyan-400','from-purple-500 to-purple-400','from-emerald-500 to-emerald-400','from-orange-500 to-orange-400']; return <div key={c.id}><div className="flex justify-between mb-1"><div className="flex items-center gap-2"><div className={`w-8 h-8 rounded-full bg-gradient-to-br ${colors[i%4]} flex items-center justify-center text-white text-xs font-semibold`}>{c.name?.split(' ').map(n=>n[0]).join('')}</div><span className="text-gray-300">{c.name}</span></div><span className="text-white font-semibold">€{c.revenue.toLocaleString()}</span></div><div className="h-2 bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full bg-gradient-to-r ${colors[i%4]}`} style={{width:`${(c.revenue/max)*100}%`}}/></div></div>})}</div>}
               </div>
 
               <div className="bg-gray-800/50 backdrop-blur border border-emerald-500/30 rounded-2xl p-6 mb-8">
-                <h3 className="text-lg font-semibold mb-6">📅 Yearly Income Pattern</h3>
+                <h3 className="text-lg font-semibold mb-6">📅 Yearly Pattern</h3>
                 <YearlyIncomePattern payments={payments} />
               </div>
 
-              {/* Updated Session Tracker with Add/Deduct */}
               <div className="bg-gray-800/50 backdrop-blur border border-cyan-500/30 rounded-2xl p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-6">✅ Session Tracker</h3>
-                {payments.length === 0 ? <p className="text-gray-500 text-center py-8">No payments yet. Add a payment to track sessions!</p> : (
-                  <div>
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-emerald-400">{payments.reduce((sum, p) => sum + p.sessions_completed, 0)}</div><div className="text-gray-400 text-sm">Completed</div></div>
-                      <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-orange-400">{payments.reduce((sum, p) => sum + (p.sessions - p.sessions_completed), 0)}</div><div className="text-gray-400 text-sm">Remaining</div></div>
-                      <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{payments.reduce((sum, p) => sum + p.sessions, 0)}</div><div className="text-gray-400 text-sm">Total</div></div>
-                    </div>
-                    <div className="space-y-4">
-                      {payments.filter(p => p.sessions > p.sessions_completed || p.sessions_completed > 0).map(payment => (
-                        <div key={payment.id} className="bg-gray-800/30 rounded-xl border border-gray-700/30 p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">{payment.clients?.name?.split(' ').map(n => n[0]).join('') || '?'}</div>
-                              <div><div className="text-white font-medium">{payment.clients?.name || 'Unknown'}</div><div className="text-xs text-gray-400">{payment.type} • €{payment.amount}</div></div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-white font-semibold">{payment.sessions_completed}/{payment.sessions}</div>
-                              <div className={`text-xs ${payment.sessions - payment.sessions_completed <= 2 && payment.sessions - payment.sessions_completed > 0 ? 'text-orange-400' : 'text-gray-400'}`}>
-                                {payment.sessions - payment.sessions_completed} left
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            {/* Deduct button */}
-                            <button
-                              onClick={() => updateSession(payment.id, payment.sessions_completed, payment.sessions, 'deduct')}
-                              disabled={payment.sessions_completed === 0}
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition-all ${payment.sessions_completed > 0 ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 cursor-pointer' : 'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}
-                            >
-                              −
-                            </button>
-                            {/* Session boxes */}
-                            <div className="flex flex-wrap gap-2 flex-1">
-                              {Array.from({ length: payment.sessions }, (_, i) => (
-                                <div
-                                  key={i}
-                                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${
-                                    i < payment.sessions_completed 
-                                      ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400' 
-                                      : 'bg-gray-700/30 border border-gray-600/30 text-gray-500'
-                                  }`}
-                                >
-                                  {i < payment.sessions_completed ? '✓' : i + 1}
-                                </div>
-                              ))}
-                            </div>
-                            {/* Add button */}
-                            <button
-                              onClick={() => updateSession(payment.id, payment.sessions_completed, payment.sessions, 'add')}
-                              disabled={payment.sessions_completed >= payment.sessions}
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition-all ${payment.sessions_completed < payment.sessions ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30 cursor-pointer' : 'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                {payments.length === 0 ? <p className="text-gray-500 text-center py-8">No payments yet</p> : <div>
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-emerald-400">{payments.reduce((s,p)=>s+p.sessions_completed,0)}</div><div className="text-gray-400 text-sm">Done</div></div>
+                    <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-orange-400">{payments.reduce((s,p)=>s+(p.sessions-p.sessions_completed),0)}</div><div className="text-gray-400 text-sm">Left</div></div>
+                    <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{payments.reduce((s,p)=>s+p.sessions,0)}</div><div className="text-gray-400 text-sm">Total</div></div>
                   </div>
-                )}
+                  <div className="space-y-4">{payments.filter(p => p.sessions > 0).map(p => <div key={p.id} className="bg-gray-800/30 rounded-xl border border-gray-700/30 p-4">
+                    <div className="flex justify-between mb-3"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">{p.clients?.name?.split(' ').map(n=>n[0]).join('')||'?'}</div><div><div className="text-white font-medium">{p.clients?.name||'?'}</div><div className="text-xs text-gray-400">{p.type} • €{p.amount}</div></div></div><div className="text-right"><div className="text-white font-semibold">{p.sessions_completed}/{p.sessions}</div><div className={`text-xs ${p.sessions-p.sessions_completed<=2 && p.sessions-p.sessions_completed>0 ? 'text-orange-400':'text-gray-400'}`}>{p.sessions-p.sessions_completed} left</div></div></div>
+                    <div className="flex items-center gap-3"><button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'deduct')} disabled={p.sessions_completed===0} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold ${p.sessions_completed>0 ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>−</button><div className="flex flex-wrap gap-2 flex-1">{Array.from({length:p.sessions},(_,i)=><div key={i} className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${i<p.sessions_completed ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400':'bg-gray-700/30 border border-gray-600/30 text-gray-500'}`}>{i<p.sessions_completed?'✓':i+1}</div>)}</div><button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'add')} disabled={p.sessions_completed>=p.sessions} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold ${p.sessions_completed<p.sessions ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>+</button></div>
+                  </div>)}</div>
+                </div>}
               </div>
 
               <div className="bg-gray-800/50 backdrop-blur border border-purple-500/30 rounded-2xl p-6 mb-8">
@@ -617,42 +491,10 @@
 
               <div className="bg-gray-800/50 backdrop-blur border border-yellow-500/30 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold mb-6">💵 Price Per Session</h3>
-                {payments.length === 0 ? <p className="text-gray-500 text-center py-8">No pricing data yet.</p> : (
-                  <div>
-                    <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6">
-                      <div className="flex items-center justify-between">
-                        <div><div className="text-gray-400 text-sm">Average Price Per Session</div><div className="text-3xl font-bold text-yellow-400">€{(payments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) / payments.reduce((sum, p) => sum + (p.sessions || 0), 0) || 0).toFixed(2)}</div></div>
-                        <div className="text-right"><div className="text-gray-400 text-sm">Total Sessions</div><div className="text-xl font-semibold text-white">{payments.reduce((sum, p) => sum + (p.sessions || 0), 0)}</div></div>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      {clients.map(client => {
-                        const cp = payments.filter(p => p.client_id === client.id);
-                        const ta = cp.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-                        const ts = cp.reduce((sum, p) => sum + (p.sessions || 0), 0);
-                        return { ...client, pricePerSession: ts > 0 ? ta / ts : 0, totalSessions: ts };
-                      }).filter(c => c.totalSessions > 0).sort((a, b) => b.pricePerSession - a.pricePerSession).map((client, i) => {
-                        const maxPrice = Math.max(...clients.map(c => { const cp = payments.filter(p => p.client_id === c.id); const ta = cp.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0); const ts = cp.reduce((sum, p) => sum + (p.sessions || 0), 0); return ts > 0 ? ta / ts : 0; }), 1);
-                        const colors = ['from-yellow-500 to-amber-500', 'from-orange-500 to-red-500', 'from-cyan-500 to-blue-500', 'from-emerald-500 to-green-500'];
-                        return (
-                          <div key={client.id}>
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="flex items-center gap-2">
-                                <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${colors[i % colors.length]} flex items-center justify-center text-white text-xs font-semibold`}>{client.name?.split(' ').map(n => n[0]).join('')}</div>
-                                <span className="text-gray-300 text-sm">{client.name}</span>
-                                <span className="text-gray-500 text-xs">({client.totalSessions} sessions)</span>
-                              </div>
-                              <span className="text-yellow-400 font-semibold text-sm">€{client.pricePerSession.toFixed(2)}/session</span>
-                            </div>
-                            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full bg-gradient-to-r ${colors[i % colors.length]}`} style={{ width: `${(client.pricePerSession / maxPrice) * 100}%` }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                {payments.length === 0 ? <p className="text-gray-500 text-center py-8">No data</p> : <div>
+                  <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6 flex justify-between items-center"><div><div className="text-gray-400 text-sm">Avg Per Session</div><div className="text-3xl font-bold text-yellow-400">€{(payments.reduce((s,p)=>s+parseFloat(p.amount||0),0)/payments.reduce((s,p)=>s+(p.sessions||0),0)||0).toFixed(2)}</div></div><div className="text-right"><div className="text-gray-400 text-sm">Total Sessions</div><div className="text-xl font-semibold text-white">{payments.reduce((s,p)=>s+(p.sessions||0),0)}</div></div></div>
+                  <div className="space-y-3">{clients.map(c => {const cp = payments.filter(p=>p.client_id===c.id); const ta = cp.reduce((s,p)=>s+parseFloat(p.amount||0),0); const ts = cp.reduce((s,p)=>s+(p.sessions||0),0); return {...c, pps: ts>0?ta/ts:0, ts};}).filter(c=>c.ts>0).sort((a,b)=>b.pps-a.pps).map((c,i) => {const max = Math.max(...clients.map(cl=>{const cp=payments.filter(p=>p.client_id===cl.id);const ta=cp.reduce((s,p)=>s+parseFloat(p.amount||0),0);const ts=cp.reduce((s,p)=>s+(p.sessions||0),0);return ts>0?ta/ts:0;}),1); const colors = ['from-yellow-500 to-amber-500','from-orange-500 to-red-500','from-cyan-500 to-blue-500','from-emerald-500 to-green-500']; return <div key={c.id}><div className="flex justify-between mb-1"><div className="flex items-center gap-2"><div className={`w-6 h-6 rounded-full bg-gradient-to-br ${colors[i%4]} flex items-center justify-center text-white text-xs font-semibold`}>{c.name?.split(' ').map(n=>n[0]).join('')}</div><span className="text-gray-300 text-sm">{c.name}</span><span className="text-gray-500 text-xs">({c.ts})</span></div><span className="text-yellow-400 font-semibold text-sm">€{c.pps.toFixed(2)}</span></div><div className="h-2 bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full bg-gradient-to-r ${colors[i%4]}`} style={{width:`${(c.pps/max)*100}%`}}/></div></div>})}</div>
+                </div>}
               </div>
             </main>
           </div>
