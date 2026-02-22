@@ -25,9 +25,9 @@
     // YOUR STRIPE PAYMENT LINKS - REPLACE THESE
     // ==========================================
     const STRIPE_LINKS = {
-      monthly: 'https://buy.stripe.com/9B68wPfTF04Hbbkeoe3AY00',
-      yearly: 'https://buy.stripe.com/28E4gz36T6t54MW1Bs3AY01',
-      lifetime: 'https://buy.stripe.com/00w7sL0YL2cP93cgwm3AY02'
+      monthly: 'https://buy.stripe.com/YOUR_MONTHLY_LINK',
+      yearly: 'https://buy.stripe.com/YOUR_YEARLY_LINK',
+      lifetime: 'https://buy.stripe.com/YOUR_LIFETIME_LINK'
     };
     // ==========================================
     
@@ -35,73 +35,100 @@
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const { useState, useEffect } = React;
 
-    // Paywall Component
-    const Paywall = ({ email, onLogout }) => (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 pointer-events-none" />
-        <div className="fixed top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="relative max-w-4xl w-full">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h1>
-            <p className="text-gray-400 text-lg">Get full access to PT LOG and start tracking your revenue</p>
-            <p className="text-gray-500 text-sm mt-2">Logged in as {email}</p>
-          </div>
+    // Check if user just came from payment
+    const urlParams = new URLSearchParams(window.location.search);
+    const justPaid = urlParams.get('welcome') === 'true';
 
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 hover:border-cyan-500/50 transition-all">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-white mb-2">Monthly</h3>
-                <div className="text-4xl font-bold text-white mb-1">€19</div>
-                <div className="text-gray-400 text-sm mb-6">per month</div>
-                <ul className="text-left space-y-3 mb-6">
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features included</li>
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Unlimited clients</li>
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Cancel anytime</li>
-                </ul>
-                <a href={STRIPE_LINKS.monthly} className="block w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors text-center">Get Started</a>
+    // Paywall Component - Shows when user has no active subscription
+    const Paywall = ({ email, onLogout, onRetry }) => {
+      const [retrying, setRetrying] = useState(false);
+
+      const handleRetry = async () => {
+        setRetrying(true);
+        await onRetry();
+        setRetrying(false);
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 pointer-events-none" />
+          <div className="fixed top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="fixed bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative max-w-4xl w-full">
+            {/* Just paid message */}
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 mb-6 text-center">
+              <p className="text-yellow-400 font-medium">🎉 Just completed payment?</p>
+              <p className="text-gray-400 text-sm mt-1">It may take up to 30 seconds to activate. Click below to check again.</p>
+              <button 
+                onClick={handleRetry} 
+                disabled={retrying}
+                className="mt-3 px-6 py-2 bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-600 text-gray-900 font-semibold rounded-xl text-sm"
+              >
+                {retrying ? 'Checking...' : 'Check My Subscription'}
+              </button>
+            </div>
+
+            <div className="text-center mb-10">
+              <h1 className="text-4xl font-bold text-white mb-4">Choose Your Plan</h1>
+              <p className="text-gray-400 text-lg">Get full access to PT LOG and start tracking your revenue</p>
+              <p className="text-gray-500 text-sm mt-2">Logged in as {email}</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 hover:border-cyan-500/50 transition-all">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-white mb-2">Monthly</h3>
+                  <div className="text-4xl font-bold text-white mb-1">€19</div>
+                  <div className="text-gray-400 text-sm mb-6">per month</div>
+                  <ul className="text-left space-y-3 mb-6">
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features included</li>
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Unlimited clients</li>
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Cancel anytime</li>
+                  </ul>
+                  <a href={STRIPE_LINKS.monthly} className="block w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors text-center">Get Started</a>
+                </div>
+              </div>
+
+              <div className="bg-gray-800 border-2 border-cyan-500 rounded-2xl p-6 relative transform md:-translate-y-2">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-500 text-gray-900 text-xs font-bold px-4 py-1 rounded-full">BEST VALUE</div>
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-white mb-2">Yearly</h3>
+                  <div className="text-4xl font-bold text-white mb-1">€190</div>
+                  <div className="text-gray-400 text-sm mb-1">per year</div>
+                  <div className="text-emerald-400 text-sm font-medium mb-6">Save €38 (2 months free!)</div>
+                  <ul className="text-left space-y-3 mb-6">
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features included</li>
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Unlimited clients</li>
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Priority support</li>
+                  </ul>
+                  <a href={STRIPE_LINKS.yearly} className="block w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold rounded-xl transition-colors text-center">Get Started</a>
+                </div>
+              </div>
+
+              <div className="bg-gray-800 border border-yellow-500/50 rounded-2xl p-6 hover:border-yellow-500 transition-all">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-white mb-2">Lifetime</h3>
+                  <div className="text-4xl font-bold text-white mb-1">€249</div>
+                  <div className="text-gray-400 text-sm mb-1">one-time payment</div>
+                  <div className="text-orange-400 text-sm font-medium mb-6">🔥 Only 50 spots!</div>
+                  <ul className="text-left space-y-3 mb-6">
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features forever</li>
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All future updates</li>
+                    <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Never pay again</li>
+                  </ul>
+                  <a href={STRIPE_LINKS.lifetime} className="block w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold rounded-xl transition-colors text-center">Get Lifetime Access</a>
+                </div>
               </div>
             </div>
 
-            <div className="bg-gray-800 border-2 border-cyan-500 rounded-2xl p-6 relative transform md:-translate-y-2">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-500 text-gray-900 text-xs font-bold px-4 py-1 rounded-full">BEST VALUE</div>
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-white mb-2">Yearly</h3>
-                <div className="text-4xl font-bold text-white mb-1">€190</div>
-                <div className="text-gray-400 text-sm mb-1">per year</div>
-                <div className="text-emerald-400 text-sm font-medium mb-6">Save €38 (2 months free!)</div>
-                <ul className="text-left space-y-3 mb-6">
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features included</li>
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Unlimited clients</li>
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Priority support</li>
-                </ul>
-                <a href={STRIPE_LINKS.yearly} className="block w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold rounded-xl transition-colors text-center">Get Started</a>
-              </div>
+            <div className="text-center">
+              <button onClick={onLogout} className="text-gray-500 hover:text-gray-300 text-sm">Logout</button>
             </div>
-
-            <div className="bg-gray-800 border border-yellow-500/50 rounded-2xl p-6 hover:border-yellow-500 transition-all">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-white mb-2">Lifetime</h3>
-                <div className="text-4xl font-bold text-white mb-1">€249</div>
-                <div className="text-gray-400 text-sm mb-1">one-time payment</div>
-                <div className="text-orange-400 text-sm font-medium mb-6">🔥 Only 50 spots!</div>
-                <ul className="text-left space-y-3 mb-6">
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All features forever</li>
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> All future updates</li>
-                  <li className="flex items-center text-gray-300 text-sm"><span className="text-emerald-400 mr-2">✓</span> Never pay again</li>
-                </ul>
-                <a href={STRIPE_LINKS.lifetime} className="block w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold rounded-xl transition-colors text-center">Get Lifetime Access</a>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <button onClick={onLogout} className="text-gray-500 hover:text-gray-300 text-sm">Logout</button>
           </div>
         </div>
-      </div>
-    );
+      );
+    };
 
     const Modal = ({ title, children, onClose }) => (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
@@ -244,12 +271,14 @@
       );
     };
 
+    // Auth Screen - Shows SIGN UP by default if coming from payment
     const AuthScreen = ({ onLogin }) => {
-      const [isLogin, setIsLogin] = useState(true);
+      const [isLogin, setIsLogin] = useState(!justPaid); // Show Sign Up if just paid
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
       const [error, setError] = useState('');
       const [loading, setLoading] = useState(false);
+      
       const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -263,6 +292,7 @@
         } catch (err) { setError(err.message); }
         finally { setLoading(false); }
       };
+      
       return (
         <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 pointer-events-none" />
@@ -273,10 +303,19 @@
               <h1 className="text-3xl font-bold text-cyan-400">PT LOG</h1>
               <p className="text-gray-400 mt-2">Revenue Compass for Coaches</p>
             </div>
+            
+            {/* Welcome message for users coming from payment */}
+            {justPaid && !isLogin && (
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-6">
+                <p className="text-emerald-400 font-medium text-center">🎉 Payment successful!</p>
+                <p className="text-gray-400 text-sm text-center mt-1">Create your account using the <strong>same email</strong> you used for payment.</p>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Email</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="you@example.com" required />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="Use the same email from payment" required />
               </div>
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Password</label>
@@ -387,7 +426,7 @@
       if (loading) return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-cyan-400 text-xl">Loading...</div></div>;
       if (!user) return <AuthScreen onLogin={setUser} />;
       if (checkingSub) return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-cyan-400 text-xl">Checking subscription...</div></div>;
-      if (!subscription) return <Paywall email={user.email} onLogout={handleLogout} />;
+      if (!subscription) return <Paywall email={user.email} onLogout={handleLogout} onRetry={checkSubscription} />;
 
       return (
         <div className="min-h-screen bg-gray-900 text-white">
