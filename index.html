@@ -12,6 +12,8 @@
   <style>
     body { background: #111827; margin: 0; }
     * { box-sizing: border-box; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body>
@@ -342,7 +344,7 @@
       const [showPaymentModal, setShowPaymentModal] = useState(false);
       const [showTargetsModal, setShowTargetsModal] = useState(false);
       const [newClient, setNewClient] = useState({ name: '', email: '', phone: '' });
-      const [newPayment, setNewPayment] = useState({ client_id: '', type: 'Pack', amount: '', sessions: '', date: new Date().toISOString().split('T')[0] });
+      const [newPayment, setNewPayment] = useState({ client_id: '', type: 'Pack', amount: '', sessions: '', duration: 60, date: new Date().toISOString().split('T')[0] });
       const [editTargets, setEditTargets] = useState({ revenueGoal: 5000, clientsGoal: 15 });
 
       useEffect(() => {
@@ -392,8 +394,19 @@
 
       const handleAddPayment = async () => {
         if (!newPayment.client_id || !newPayment.amount || !newPayment.sessions) return;
-        await supabaseClient.from('payments').insert([{ client_id: newPayment.client_id, type: newPayment.type, amount: parseFloat(newPayment.amount), sessions: parseInt(newPayment.sessions), sessions_completed: 0, user_id: user.id, date: newPayment.date }]);
-        setNewPayment({ client_id: '', type: 'Pack', amount: '', sessions: '', date: new Date().toISOString().split('T')[0] }); setShowPaymentModal(false); fetchAllData();
+        await supabaseClient.from('payments').insert([{ 
+          client_id: newPayment.client_id, 
+          type: newPayment.type, 
+          amount: parseFloat(newPayment.amount), 
+          sessions: parseInt(newPayment.sessions), 
+          sessions_completed: 0, 
+          duration: newPayment.duration || 60,
+          user_id: user.id, 
+          date: newPayment.date 
+        }]);
+        setNewPayment({ client_id: '', type: 'Pack', amount: '', sessions: '', duration: 60, date: new Date().toISOString().split('T')[0] }); 
+        setShowPaymentModal(false); 
+        fetchAllData();
       };
 
       const updateSession = async (id, curr, total, action) => {
@@ -436,21 +449,87 @@
 
           {showNewClientModal && <Modal title="New Client" onClose={() => setShowNewClientModal(false)}>
             <div className="space-y-4">
-              <div><label className="block text-gray-400 text-sm mb-2">Name *</label><input type="text" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="Client name" /></div>
-              <div><label className="block text-gray-400 text-sm mb-2">Email <span className="text-gray-500">(optional)</span></label><input type="email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
-              <div><label className="block text-gray-400 text-sm mb-2">Phone <span className="text-gray-500">(optional)</span></label><input type="tel" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
-              <div className="flex gap-3 pt-4"><button onClick={() => setShowNewClientModal(false)} className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button><button onClick={handleAddClient} disabled={!newClient.name.trim()} className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 rounded-xl font-medium">Add</button></div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Client Name *</label>
+                <input type="text" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="Enter client name" autoFocus />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowNewClientModal(false)} className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button>
+                <button onClick={handleAddClient} disabled={!newClient.name.trim()} className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 rounded-xl font-medium">Add Client</button>
+              </div>
             </div>
           </Modal>}
 
           {showPaymentModal && <Modal title="Add Payment" onClose={() => setShowPaymentModal(false)}>
             <div className="space-y-4">
-              <div><label className="block text-gray-400 text-sm mb-2">Client *</label><select value={newPayment.client_id} onChange={(e) => setNewPayment({...newPayment, client_id: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none"><option value="">Select...</option>{clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-              <div><label className="block text-gray-400 text-sm mb-2">Type</label><div className="grid grid-cols-3 gap-2">{['Single','Pack','Monthly'].map(t => <button key={t} onClick={() => setNewPayment({...newPayment, type: t})} className={`p-3 rounded-xl border ${newPayment.type === t ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-gray-700/50 border-gray-600 text-gray-300'}`}>{t}</button>)}</div></div>
-              <div className="grid grid-cols-2 gap-4"><div><label className="block text-gray-400 text-sm mb-2">Amount (€) *</label><input type="number" value={newPayment.amount} onChange={(e) => setNewPayment({...newPayment, amount: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div><div><label className="block text-gray-400 text-sm mb-2">Sessions *</label><input type="number" value={newPayment.sessions} onChange={(e) => setNewPayment({...newPayment, sessions: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div></div>
-              <div><label className="block text-gray-400 text-sm mb-2">Date</label><input type="date" value={newPayment.date} onChange={(e) => setNewPayment({...newPayment, date: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" /></div>
-              {newPayment.amount && newPayment.sessions && <div className="bg-gray-700/50 rounded-xl p-4 flex justify-between"><span className="text-gray-400">Per session:</span><span className="text-xl font-bold text-yellow-400">€{(parseFloat(newPayment.amount)/parseInt(newPayment.sessions)).toFixed(2)}</span></div>}
-              <div className="flex gap-3 pt-4"><button onClick={() => setShowPaymentModal(false)} className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button><button onClick={handleAddPayment} disabled={!newPayment.client_id || !newPayment.amount || !newPayment.sessions} className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 rounded-xl font-medium">Add</button></div>
+              {/* Client Selection */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Client *</label>
+                <select value={newPayment.client_id} onChange={(e) => setNewPayment({...newPayment, client_id: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none">
+                  <option value="">Select client...</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              
+              {/* Payment Type */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Type</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['Single','Pack','Monthly'].map(t => (
+                    <button key={t} onClick={() => setNewPayment({...newPayment, type: t})} className={`p-3 rounded-xl border text-sm font-medium transition-all ${newPayment.type === t ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400' : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:border-gray-500'}`}>{t}</button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Session Duration */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Session Length</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[30, 45, 60, 90].map(d => (
+                    <button key={d} onClick={() => setNewPayment({...newPayment, duration: d})} className={`p-3 rounded-xl border text-sm font-medium transition-all ${newPayment.duration === d ? 'bg-purple-500/20 border-purple-500 text-purple-400' : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:border-gray-500'}`}>{d}min</button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Amount and Sessions */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Amount (€) *</label>
+                  <input type="number" value={newPayment.amount} onChange={(e) => setNewPayment({...newPayment, amount: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="0.00" />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Sessions *</label>
+                  <input type="number" value={newPayment.sessions} onChange={(e) => setNewPayment({...newPayment, sessions: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="0" />
+                </div>
+              </div>
+              
+              {/* Date */}
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Payment Date</label>
+                <input type="date" value={newPayment.date} onChange={(e) => setNewPayment({...newPayment, date: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" />
+              </div>
+              
+              {/* Price Summary */}
+              {newPayment.amount && newPayment.sessions && (
+                <div className="bg-gray-700/50 rounded-xl p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-400 text-sm">Per session:</span>
+                    <span className="text-xl font-bold text-yellow-400">€{(parseFloat(newPayment.amount)/parseInt(newPayment.sessions)).toFixed(2)}</span>
+                  </div>
+                  {newPayment.duration && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 text-sm">Per hour:</span>
+                      <span className="text-lg font-semibold text-emerald-400">€{((parseFloat(newPayment.amount)/parseInt(newPayment.sessions)) * (60/newPayment.duration)).toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setShowPaymentModal(false)} className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-medium">Cancel</button>
+                <button onClick={handleAddPayment} disabled={!newPayment.client_id || !newPayment.amount || !newPayment.sessions} className="flex-1 py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-600 text-gray-900 rounded-xl font-medium">Add Payment</button>
+              </div>
             </div>
           </Modal>}
 
@@ -517,8 +596,30 @@
                     <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{payments.reduce((s,p)=>s+p.sessions,0)}</div><div className="text-gray-400 text-sm">Total</div></div>
                   </div>
                   <div className="space-y-4">{payments.filter(p => p.sessions > 0).map(p => <div key={p.id} className="bg-gray-800/30 rounded-xl border border-gray-700/30 p-4">
-                    <div className="flex justify-between mb-3"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">{p.clients?.name?.split(' ').map(n=>n[0]).join('')||'?'}</div><div><div className="text-white font-medium">{p.clients?.name||'?'}</div><div className="text-xs text-gray-400">{p.type} • €{p.amount}</div></div></div><div className="text-right"><div className="text-white font-semibold">{p.sessions_completed}/{p.sessions}</div><div className={`text-xs ${p.sessions-p.sessions_completed<=2 && p.sessions-p.sessions_completed>0 ? 'text-orange-400':'text-gray-400'}`}>{p.sessions-p.sessions_completed} left</div></div></div>
-                    <div className="flex items-center gap-3"><button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'deduct')} disabled={p.sessions_completed===0} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold ${p.sessions_completed>0 ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>−</button><div className="flex flex-wrap gap-2 flex-1">{Array.from({length:p.sessions},(_,i)=><div key={i} className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${i<p.sessions_completed ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400':'bg-gray-700/30 border border-gray-600/30 text-gray-500'}`}>{i<p.sessions_completed?'✓':i+1}</div>)}</div><button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'add')} disabled={p.sessions_completed>=p.sessions} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold ${p.sessions_completed<p.sessions ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>+</button></div>
+                    <div className="flex justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">{p.clients?.name?.split(' ').map(n=>n[0]).join('')||'?'}</div>
+                        <div>
+                          <div className="text-white font-medium">{p.clients?.name||'?'}</div>
+                          <div className="text-xs text-gray-400">{p.type} • €{p.amount}{p.duration ? ` • ${p.duration}min` : ''}</div>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-white font-semibold">{p.sessions_completed}/{p.sessions}</div>
+                        <div className={`text-xs ${p.sessions-p.sessions_completed<=2 && p.sessions-p.sessions_completed>0 ? 'text-orange-400':'text-gray-400'}`}>{p.sessions-p.sessions_completed} left</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'deduct')} disabled={p.sessions_completed===0} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${p.sessions_completed>0 ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>−</button>
+                      <div className="flex-1 overflow-x-auto scrollbar-hide">
+                        <div className="flex gap-2" style={{minWidth: 'max-content'}}>
+                          {Array.from({length:p.sessions},(_,i)=>(
+                            <div key={i} className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium flex-shrink-0 ${i<p.sessions_completed ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400':'bg-gray-700/30 border border-gray-600/30 text-gray-500'}`}>{i<p.sessions_completed?'✓':i+1}</div>
+                          ))}
+                        </div>
+                      </div>
+                      <button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'add')} disabled={p.sessions_completed>=p.sessions} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${p.sessions_completed<p.sessions ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>+</button>
+                    </div>
                   </div>)}</div>
                 </div>}
               </div>
@@ -531,8 +632,52 @@
               <div className="bg-gray-800/50 backdrop-blur border border-yellow-500/30 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold mb-6">💵 Price Per Session</h3>
                 {payments.length === 0 ? <p className="text-gray-500 text-center py-8">No data</p> : <div>
-                  <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6 flex justify-between items-center"><div><div className="text-gray-400 text-sm">Avg Per Session</div><div className="text-3xl font-bold text-yellow-400">€{(payments.reduce((s,p)=>s+parseFloat(p.amount||0),0)/payments.reduce((s,p)=>s+(p.sessions||0),0)||0).toFixed(2)}</div></div><div className="text-right"><div className="text-gray-400 text-sm">Total Sessions</div><div className="text-xl font-semibold text-white">{payments.reduce((s,p)=>s+(p.sessions||0),0)}</div></div></div>
-                  <div className="space-y-3">{clients.map(c => {const cp = payments.filter(p=>p.client_id===c.id); const ta = cp.reduce((s,p)=>s+parseFloat(p.amount||0),0); const ts = cp.reduce((s,p)=>s+(p.sessions||0),0); return {...c, pps: ts>0?ta/ts:0, ts};}).filter(c=>c.ts>0).sort((a,b)=>b.pps-a.pps).map((c,i) => {const max = Math.max(...clients.map(cl=>{const cp=payments.filter(p=>p.client_id===cl.id);const ta=cp.reduce((s,p)=>s+parseFloat(p.amount||0),0);const ts=cp.reduce((s,p)=>s+(p.sessions||0),0);return ts>0?ta/ts:0;}),1); const colors = ['from-yellow-500 to-amber-500','from-orange-500 to-red-500','from-cyan-500 to-blue-500','from-emerald-500 to-green-500']; return <div key={c.id}><div className="flex justify-between mb-1"><div className="flex items-center gap-2"><div className={`w-6 h-6 rounded-full bg-gradient-to-br ${colors[i%4]} flex items-center justify-center text-white text-xs font-semibold`}>{c.name?.split(' ').map(n=>n[0]).join('')}</div><span className="text-gray-300 text-sm">{c.name}</span><span className="text-gray-500 text-xs">({c.ts})</span></div><span className="text-yellow-400 font-semibold text-sm">€{c.pps.toFixed(2)}</span></div><div className="h-2 bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full bg-gradient-to-r ${colors[i%4]}`} style={{width:`${(c.pps/max)*100}%`}}/></div></div>})}</div>
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-xl p-4">
+                      <div className="text-gray-400 text-sm mb-1">Avg Per Session</div>
+                      <div className="text-2xl font-bold text-yellow-400">€{(payments.reduce((s,p)=>s+parseFloat(p.amount||0),0)/payments.reduce((s,p)=>s+(p.sessions||0),0)||0).toFixed(2)}</div>
+                    </div>
+                    <div className="bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/30 rounded-xl p-4">
+                      <div className="text-gray-400 text-sm mb-1">Avg Per Hour</div>
+                      <div className="text-2xl font-bold text-emerald-400">€{(payments.reduce((s,p) => {
+                        const pps = parseFloat(p.amount||0) / (p.sessions||1);
+                        const pph = pps * (60 / (p.duration || 60));
+                        return s + (pph * (p.sessions||0));
+                      }, 0) / payments.reduce((s,p)=>s+(p.sessions||0),0) || 0).toFixed(2)}</div>
+                    </div>
+                  </div>
+                  
+                  {/* By Duration Brackets */}
+                  {[30, 45, 60, 90].map(dur => {
+                    const durPayments = payments.filter(p => (p.duration || 60) === dur);
+                    if (durPayments.length === 0) return null;
+                    const totalAmount = durPayments.reduce((s,p) => s + parseFloat(p.amount||0), 0);
+                    const totalSessions = durPayments.reduce((s,p) => s + (p.sessions||0), 0);
+                    const avgPps = totalSessions > 0 ? totalAmount / totalSessions : 0;
+                    const avgPph = avgPps * (60 / dur);
+                    return (
+                      <div key={dur} className="mb-4 last:mb-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-purple-400">{dur} min sessions</span>
+                          <div className="flex gap-4 text-sm">
+                            <span className="text-gray-400">€{avgPps.toFixed(2)}/sess</span>
+                            <span className="text-emerald-400 font-medium">€{avgPph.toFixed(2)}/hr</span>
+                          </div>
+                        </div>
+                        <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-purple-500 to-purple-400" style={{width: `${Math.min((totalSessions / payments.reduce((s,p)=>s+(p.sessions||0),0)) * 100, 100)}%`}} />
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">{totalSessions} sessions • €{totalAmount.toFixed(0)} total</div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Per Client */}
+                  <div className="mt-6 pt-4 border-t border-gray-700">
+                    <h4 className="text-sm text-gray-400 mb-3">By Client</h4>
+                    <div className="space-y-3">{clients.map(c => {const cp = payments.filter(p=>p.client_id===c.id); const ta = cp.reduce((s,p)=>s+parseFloat(p.amount||0),0); const ts = cp.reduce((s,p)=>s+(p.sessions||0),0); const avgDur = ts > 0 ? cp.reduce((s,p) => s + ((p.duration||60) * (p.sessions||0)), 0) / ts : 60; return {...c, pps: ts>0?ta/ts:0, pph: ts>0?(ta/ts)*(60/avgDur):0, ts, avgDur};}).filter(c=>c.ts>0).sort((a,b)=>b.pph-a.pph).map((c,i) => {const max = Math.max(...clients.map(cl=>{const cp=payments.filter(p=>p.client_id===cl.id);const ta=cp.reduce((s,p)=>s+parseFloat(p.amount||0),0);const ts=cp.reduce((s,p)=>s+(p.sessions||0),0);const avgDur = ts > 0 ? cp.reduce((s,p) => s + ((p.duration||60) * (p.sessions||0)), 0) / ts : 60;return ts>0?(ta/ts)*(60/avgDur):0;}),1); const colors = ['from-yellow-500 to-amber-500','from-orange-500 to-red-500','from-cyan-500 to-blue-500','from-emerald-500 to-green-500']; return <div key={c.id}><div className="flex justify-between mb-1"><div className="flex items-center gap-2"><div className={`w-6 h-6 rounded-full bg-gradient-to-br ${colors[i%4]} flex items-center justify-center text-white text-xs font-semibold`}>{c.name?.split(' ').map(n=>n[0]).join('')}</div><span className="text-gray-300 text-sm">{c.name}</span><span className="text-gray-500 text-xs">({c.ts} × {Math.round(c.avgDur)}min)</span></div><div className="text-right"><span className="text-yellow-400 font-semibold text-sm">€{c.pps.toFixed(2)}</span><span className="text-gray-500 mx-1">•</span><span className="text-emerald-400 text-sm">€{c.pph.toFixed(2)}/hr</span></div></div><div className="h-2 bg-gray-700 rounded-full overflow-hidden"><div className={`h-full rounded-full bg-gradient-to-r ${colors[i%4]}`} style={{width:`${(c.pph/max)*100}%`}}/></div></div>})}</div>
+                  </div>
                 </div>}
               </div>
             </main>
@@ -540,6 +685,11 @@
         </div>
       );
     };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
 
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
