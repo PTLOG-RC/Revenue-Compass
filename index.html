@@ -602,7 +602,7 @@
                     <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-orange-400">{payments.reduce((s,p)=>s+(p.sessions-p.sessions_completed),0)}</div><div className="text-gray-400 text-sm">Left</div></div>
                     <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{payments.reduce((s,p)=>s+p.sessions,0)}</div><div className="text-gray-400 text-sm">Total</div></div>
                   </div>
-                  <div className="space-y-4">{payments.filter(p => p.sessions > 0 && p.sessions_completed < p.sessions).sort((a,b) => (b.sessions - b.sessions_completed) - (a.sessions - a.sessions_completed)).map(p => <div key={p.id} className="bg-gray-800/30 rounded-xl border border-gray-700/30 p-4">
+                  <div className="space-y-4">{payments.filter(p => p.sessions > 0 && p.sessions_completed < p.sessions).map(p => <div key={p.id} className="bg-gray-800/30 rounded-xl border border-gray-700/30 p-4">
                     <div className="flex justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">{p.clients?.name?.split(' ').map(n=>n[0]).join('')||'?'}</div>
@@ -692,6 +692,11 @@
         </div>
       );
     };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
 
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
