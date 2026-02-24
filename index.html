@@ -14,6 +14,8 @@
     * { box-sizing: border-box; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    input[type="date"] { min-height: 50px; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
   </style>
 </head>
 <body>
@@ -411,7 +413,12 @@
 
       const updateSession = async (id, curr, total, action) => {
         const newVal = action === 'add' ? Math.min(curr + 1, total) : Math.max(curr - 1, 0);
-        if (newVal !== curr) { await supabaseClient.from('payments').update({ sessions_completed: newVal }).eq('id', id); fetchAllData(); }
+        if (newVal !== curr) { 
+          // Optimistic update - update local state first
+          setPayments(prev => prev.map(p => p.id === id ? {...p, sessions_completed: newVal} : p));
+          // Then update database
+          await supabaseClient.from('payments').update({ sessions_completed: newVal }).eq('id', id);
+        }
       };
 
       const handleLogout = async () => { await supabaseClient.auth.signOut(); setUser(null); setSubscription(null); };
@@ -506,7 +513,7 @@
               {/* Date */}
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Payment Date</label>
-                <input type="date" value={newPayment.date} onChange={(e) => setNewPayment({...newPayment, date: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" />
+                <input type="date" value={newPayment.date} onChange={(e) => setNewPayment({...newPayment, date: e.target.value})} className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-3 text-white focus:border-cyan-500 focus:outline-none appearance-none" style={{minHeight: '50px'}} />
               </div>
               
               {/* Price Summary */}
@@ -595,7 +602,7 @@
                     <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-orange-400">{payments.reduce((s,p)=>s+(p.sessions-p.sessions_completed),0)}</div><div className="text-gray-400 text-sm">Left</div></div>
                     <div className="bg-gray-700/30 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{payments.reduce((s,p)=>s+p.sessions,0)}</div><div className="text-gray-400 text-sm">Total</div></div>
                   </div>
-                  <div className="space-y-4">{payments.filter(p => p.sessions > 0).map(p => <div key={p.id} className="bg-gray-800/30 rounded-xl border border-gray-700/30 p-4">
+                  <div className="space-y-4">{payments.filter(p => p.sessions > 0).sort((a,b) => (b.sessions - b.sessions_completed) - (a.sessions - a.sessions_completed)).map(p => <div key={p.id} className="bg-gray-800/30 rounded-xl border border-gray-700/30 p-4">
                     <div className="flex justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">{p.clients?.name?.split(' ').map(n=>n[0]).join('')||'?'}</div>
@@ -609,16 +616,16 @@
                         <div className={`text-xs ${p.sessions-p.sessions_completed<=2 && p.sessions-p.sessions_completed>0 ? 'text-orange-400':'text-gray-400'}`}>{p.sessions-p.sessions_completed} left</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'deduct')} disabled={p.sessions_completed===0} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${p.sessions_completed>0 ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>−</button>
-                      <div className="flex-1 overflow-x-auto scrollbar-hide">
-                        <div className="flex gap-2" style={{minWidth: 'max-content'}}>
-                          {Array.from({length:p.sessions},(_,i)=>(
-                            <div key={i} className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium flex-shrink-0 ${i<p.sessions_completed ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400':'bg-gray-700/30 border border-gray-600/30 text-gray-500'}`}>{i<p.sessions_completed?'✓':i+1}</div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'deduct')} disabled={p.sessions_completed===0} className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0 ${p.sessions_completed>0 ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>−</button>
+                      <div className="flex-1 flex items-center justify-end gap-1 overflow-hidden">
+                        <div className="flex gap-1 flex-row-reverse overflow-x-auto scrollbar-hide py-1" style={{direction: 'rtl'}}>
+                          {Array.from({length:p.sessions},(_,i)=> p.sessions - 1 - i).map(i => (
+                            <div key={i} style={{direction: 'ltr'}} className={`w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium flex-shrink-0 ${i<p.sessions_completed ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400':'bg-gray-700/30 border border-gray-600/30 text-gray-500'}`}>{i<p.sessions_completed?'✓':i+1}</div>
                           ))}
                         </div>
                       </div>
-                      <button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'add')} disabled={p.sessions_completed>=p.sessions} className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${p.sessions_completed<p.sessions ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>+</button>
+                      <button onClick={()=>updateSession(p.id,p.sessions_completed,p.sessions,'add')} disabled={p.sessions_completed>=p.sessions} className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0 ${p.sessions_completed<p.sessions ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30':'bg-gray-700/30 border border-gray-600/30 text-gray-600 cursor-not-allowed'}`}>+</button>
                     </div>
                   </div>)}</div>
                 </div>}
@@ -690,7 +697,6 @@
   </script>
 </body>
 </html>
-
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
